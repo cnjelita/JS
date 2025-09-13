@@ -1,0 +1,11 @@
+// Simple arithmetic expression grammar
+start: expr
+
+expr: term (("+" | "-") term)*
+term: factor (("*" | "/") factor)*
+factor: NUMBER | "(" expr ")"
+
+NUMBER: /[0-9]+/
+
+%import common.WS
+%ignore WS

@@ -33,3 +33,6 @@ src/clients/reddit/.secrets/
 __pycache__/
 .mypy_cache/
 .ruff_cache/
+
+# Debug files
+debug_test.js

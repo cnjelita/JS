@@ -1,0 +1,26 @@
+// Configuration file format
+start: config
+
+config: section*
+
+section: "[" SECTION_NAME "]" entry*
+
+entry: KEY "=" value
+
+value: STRING | NUMBER | BOOLEAN_TRUE | BOOLEAN_FALSE | list
+
+list: "[" [value ("," value)*] "]"
+
+SECTION_NAME: /[a-zA-Z][a-zA-Z0-9_]*/
+KEY: /[a-zA-Z][a-zA-Z0-9_.]*/
+STRING: /"[^"]*"/
+NUMBER: /[+-]?[0-9]+(\.[0-9]+)?/
+BOOLEAN_TRUE: "true"
+BOOLEAN_FALSE: "false"
+
+// Comments
+COMMENT: /#[^\n]*/
+
+%import common.WS
+%ignore WS
+%ignore COMMENT
