@@ -49,8 +49,10 @@ logical_and_expression: bitwise_or_expression ("&&" bitwise_or_expression)*
 bitwise_or_expression: bitwise_xor_expression ("|" bitwise_xor_expression)*
 bitwise_xor_expression: bitwise_and_expression ("^" bitwise_and_expression)*
 bitwise_and_expression: equality_expression ("&" equality_expression)*
-equality_expression: relational_expression (("==" | "!=" | "===" | "!==") relational_expression)*
-relational_expression: shift_expression ((">" | "<" | ">=" | "<=" | "instanceof" | "in") shift_expression)*
+equality_expression: relational_expression (EQUALITY_OP relational_expression)*
+EQUALITY_OP: "==" | "!=" | "===" | "!=="
+relational_expression: shift_expression (RELATIONAL_OP shift_expression)*
+RELATIONAL_OP: ">" | "<" | ">=" | "<=" | "instanceof" | "in"
 shift_expression: additive_expression (("<<" | ">>" | ">>>") additive_expression)*
 additive_expression: multiplicative_expression (ADDITIVE_OP multiplicative_expression)*
 ADDITIVE_OP: "+" | "-"
