@@ -1,0 +1,18 @@
+// JSON parser grammar
+start: value
+
+value: object | array | string | number | "true" | "false" | "null"
+
+object: "{" [pair ("," pair)*] "}"
+pair: string ":" value
+
+array: "[" [value ("," value)*] "]"
+
+string: ESCAPED_STRING
+number: SIGNED_NUMBER
+
+ESCAPED_STRING: /"(?:[^"\\]|\\.)*"/
+SIGNED_NUMBER: /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/
+
+%import common.WS
+%ignore WS
