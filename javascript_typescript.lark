@@ -1,0 +1,284 @@
+// JavaScript/TypeScript Lark Grammar
+// This grammar covers ECMAScript features and TypeScript-specific syntax
+
+start: program
+
+// Program structure
+program: statement*
+
+// Statements
+statement: expression_statement
+         | variable_declaration
+         | function_declaration
+         | class_declaration
+         | interface_declaration
+         | type_alias_declaration
+         | if_statement
+         | while_statement
+         | for_statement
+         | for_in_statement
+         | for_of_statement
+         | do_while_statement
+         | switch_statement
+         | try_catch_statement
+         | throw_statement
+         | return_statement
+         | break_statement
+         | continue_statement
+         | block_statement
+         | import_statement
+         | export_statement
+         | empty_statement
+
+empty_statement: ";"
+
+expression_statement: expression ";"?
+
+block_statement: "{" statement* "}"
+
+// Variable declarations
+variable_declaration: variable_kind variable_declarator ("," variable_declarator)* ";"?
+variable_kind: VAR_KIND
+VAR_KIND: "var" | "let" | "const"
+variable_declarator: identifier type_annotation? ("=" expression)?
+
+// Function declarations
+function_declaration: "async"? "function" "*"? identifier type_parameters? "(" parameter_list? ")" return_type_annotation? block_statement
+parameter_list: parameter ("," parameter)*
+parameter: identifier "?"? type_annotation? ("=" expression)?
+return_type_annotation: ":" type
+
+// Class declarations
+class_declaration: "abstract"? "class" identifier type_parameters? extends_clause? implements_clause? "{" class_body* "}"
+extends_clause: "extends" type
+implements_clause: "implements" type ("," type)*
+class_body: method_definition | property_definition | constructor_definition | access_modifier
+method_definition: access_modifier? "static"? "async"? "*"? property_name "?"? type_parameters? "(" parameter_list? ")" return_type_annotation? block_statement
+property_definition: access_modifier? "static"? "readonly"? property_name "?"? type_annotation? ("=" expression)? ";"?
+constructor_definition: access_modifier? "constructor" "(" parameter_list? ")" block_statement
+access_modifier: "public" | "private" | "protected"
+
+// TypeScript-specific declarations
+interface_declaration: "interface" identifier type_parameters? extends_clause? "{" interface_body* "}"
+interface_body: property_signature | method_signature | call_signature | construct_signature
+property_signature: "readonly"? property_name "?"? type_annotation ";"?
+method_signature: property_name "?"? type_parameters? "(" parameter_list? ")" return_type_annotation? ";"?
+call_signature: type_parameters? "(" parameter_list? ")" return_type_annotation? ";"?
+construct_signature: "new" type_parameters? "(" parameter_list? ")" return_type_annotation? ";"?
+
+type_alias_declaration: "type" identifier type_parameters? "=" type ";"?
+
+// Control flow statements
+if_statement: "if" "(" expression ")" statement ("else" statement)?
+while_statement: "while" "(" expression ")" statement
+do_while_statement: "do" statement "while" "(" expression ")" ";"?
+for_statement: "for" "(" (variable_declaration | expression)? ";" expression? ";" expression? ")" statement
+for_in_statement: "for" "(" (variable_declaration | identifier) "in" expression ")" statement
+for_of_statement: "for" "await"? "(" (variable_declaration | identifier) "of" expression ")" statement
+
+switch_statement: "switch" "(" expression ")" "{" case_clause* default_clause? "}"
+case_clause: "case" expression ":" statement*
+default_clause: "default" ":" statement*
+
+try_catch_statement: "try" block_statement catch_clause? finally_clause?
+catch_clause: "catch" "(" identifier type_annotation? ")" block_statement
+finally_clause: "finally" block_statement
+
+throw_statement: "throw" expression ";"?
+return_statement: "return" expression? ";"?
+break_statement: "break" identifier? ";"?
+continue_statement: "continue" identifier? ";"?
+
+// Import/Export statements
+import_statement: "import" import_clause "from" string_literal ";"?
+import_clause: identifier                                    // import default
+            | "{" import_specifier ("," import_specifier)* "}"  // import named
+            | identifier "," "{" import_specifier ("," import_specifier)* "}"  // import default + named
+            | "*" "as" identifier                            // import namespace
+
+import_specifier: identifier ("as" identifier)?
+
+export_statement: "export" export_clause ";"?
+            | "export" "default" (expression | function_declaration | class_declaration) ";"?
+            | "export" (variable_declaration | function_declaration | class_declaration | interface_declaration | type_alias_declaration)
+
+export_clause: "{" export_specifier ("," export_specifier)* "}"
+            | "*" ("as" identifier)? "from" string_literal
+
+export_specifier: identifier ("as" identifier)?
+
+// Expressions (simplified hierarchy)
+expression: assignment_expression
+
+assignment_expression: conditional_expression (assignment_operator conditional_expression)*
+
+assignment_operator: "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | ">>>=" | "&=" | "|=" | "^=" | "**=" | "||=" | "&&=" | "??="
+
+conditional_expression: logical_or_expression ("?" expression ":" assignment_expression)?
+
+logical_or_expression: logical_and_expression ("||" logical_and_expression)*
+logical_and_expression: bitwise_or_expression ("&&" bitwise_or_expression)*
+bitwise_or_expression: bitwise_xor_expression ("|" bitwise_xor_expression)*
+bitwise_xor_expression: bitwise_and_expression ("^" bitwise_and_expression)*
+bitwise_and_expression: equality_expression ("&" equality_expression)*
+equality_expression: relational_expression (("==" | "!=" | "===" | "!==") relational_expression)*
+relational_expression: shift_expression ((">" | "<" | ">=" | "<=" | "instanceof" | "in") shift_expression)*
+shift_expression: additive_expression (("<<" | ">>" | ">>>") additive_expression)*
+additive_expression: multiplicative_expression (("+" | "-") multiplicative_expression)*
+multiplicative_expression: exponentiation_expression (("*" | "/" | "%") exponentiation_expression)*
+exponentiation_expression: unary_expression ("**" unary_expression)*
+
+unary_expression: postfix_expression
+               | "++" unary_expression
+               | "--" unary_expression
+               | "+" unary_expression
+               | "-" unary_expression
+               | "~" unary_expression
+               | "!" unary_expression
+               | "delete" unary_expression
+               | "void" unary_expression
+               | "typeof" unary_expression
+               | "await" unary_expression
+
+postfix_expression: primary_expression postfix_operator*
+
+postfix_operator: "++" | "--" | "[" expression "]" | "." identifier | "?." identifier | "?.[" expression "]" | arguments
+
+primary_expression: "this"
+                 | identifier
+                 | literal
+                 | array_literal
+                 | object_literal
+                 | function_expression
+                 | arrow_function
+                 | class_expression
+                 | template_literal
+                 | parenthesized_expression
+
+parenthesized_expression: "(" expression ")"
+
+// Function expressions
+function_expression: "async"? "function" "*"? identifier? type_parameters? "(" parameter_list? ")" return_type_annotation? block_statement
+
+arrow_function: "async"? arrow_parameters "=>" (block_statement | expression)
+arrow_parameters: identifier
+               | "(" parameter_list? ")"
+
+// Class expressions
+class_expression: "class" identifier? type_parameters? extends_clause? implements_clause? "{" class_body* "}"
+
+// Literals
+literal: null_literal | boolean_literal | numeric_literal | string_literal | regex_literal
+
+null_literal: "null"
+boolean_literal: BOOLEAN
+BOOLEAN: "true" | "false"
+numeric_literal: NUMBER
+string_literal: STRING
+regex_literal: REGEX
+
+// Array and Object literals
+array_literal: "[" array_element_list? "]"
+array_element_list: array_element ("," array_element)*
+array_element: spread_element | expression | elision
+spread_element: "..." expression
+elision: ","
+
+object_literal: "{" property_list? "}"
+property_list: property_definition_obj ("," property_definition_obj)*
+property_definition_obj: property_assignment | method_definition_obj | spread_element
+
+property_assignment: property_name ":" expression
+                  | "[" expression "]" ":" expression
+
+method_definition_obj: "async"? "*"? property_name "(" parameter_list? ")" block_statement
+                    | "get" property_name "(" ")" block_statement
+                    | "set" property_name "(" parameter ")" block_statement
+
+property_name: identifier | string_literal | numeric_literal | "[" expression "]"
+
+// Template literals
+template_literal: "`" template_element* "`"
+template_element: TEMPLATE_STRING | template_substitution
+template_substitution: "${" expression "}"
+
+// Arguments
+arguments: "(" argument_list? ")"
+argument_list: argument ("," argument)*
+argument: spread_element | expression
+
+// TypeScript Type System
+type: primary_type
+   | union_type
+   | intersection_type
+   | conditional_type
+   | function_type
+   | constructor_type
+
+primary_type: predefined_type
+           | type_reference
+           | object_type
+           | array_type
+           | tuple_type
+           | literal_type
+           | "(" type ")"
+
+predefined_type: "any" | "unknown" | "object" | "boolean" | "number" | "bigint" | "string" | "symbol" | "void" | "undefined" | "null" | "never"
+
+type_reference: identifier type_arguments?
+type_arguments: "<" type ("," type)* ">"
+
+object_type: "{" type_member* "}"
+type_member: property_signature | method_signature | call_signature | construct_signature | index_signature
+
+index_signature: "[" identifier ":" type "]" ":" type ";"?
+
+array_type: type "[" "]"
+tuple_type: "[" type ("," type)* "]"
+
+literal_type: string_literal | numeric_literal | boolean_literal
+
+union_type: type "|" type ("|" type)*
+intersection_type: type "&" type ("&" type)*
+
+conditional_type: type "extends" type "?" type ":" type
+
+function_type: type_parameters? "(" parameter_list? ")" "=>" type
+constructor_type: "new" type_parameters? "(" parameter_list? ")" "=>" type
+
+type_parameters: "<" type_parameter ("," type_parameter)* ">"
+type_parameter: identifier constraint? default_type?
+constraint: "extends" type
+default_type: "=" type
+
+type_annotation: ":" type
+
+// Identifiers and tokens
+identifier: IDENTIFIER
+
+IDENTIFIER: /(?!(?:var|let|const|function|class|if|else|while|for|do|switch|case|default|try|catch|finally|throw|return|break|continue|import|export|interface|type|async|await|new|delete|void|typeof|instanceof|in|true|false|null|undefined|this)\b)[a-zA-Z_$][a-zA-Z0-9_$]*/
+
+// Numbers
+NUMBER: DECIMAL | HEXADECIMAL | OCTAL | BINARY
+DECIMAL: /[0-9]+(\.[0-9]*)?([eE][+-]?[0-9]+)?/
+HEXADECIMAL: /0[xX][0-9a-fA-F]+/
+OCTAL: /0[oO][0-7]+/
+BINARY: /0[bB][01]+/
+
+// Strings
+STRING: DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING
+DOUBLE_QUOTED_STRING: /"([^"\\]|\\.)*"/
+SINGLE_QUOTED_STRING: /'([^'\\]|\\.)*'/
+
+// Template strings
+TEMPLATE_STRING: /[^`$\\]+|\\.|(\$(?!\{))/
+
+// Regular expressions
+REGEX: /\/(?:[^\/\\\n]|\\.)+\/[gimsuvy]*/
+
+// Comments and whitespace
+%import common.WS
+%ignore WS
+
+COMMENT: "//" /[^\n]*/ | "/*" /.*?/ "*/"
+%ignore COMMENT
