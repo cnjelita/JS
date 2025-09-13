@@ -1,5 +1,9 @@
+export * from './transaction.js';
+
 async function main() {
-  console.log("hello world");
+  // eslint-disable-next-line no-console
+  console.log("Bitcoin Transaction Library initialized");
 }
 
+// eslint-disable-next-line no-console
 main().catch(console.error);
