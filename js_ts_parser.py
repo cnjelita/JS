@@ -33,7 +33,8 @@ class JavaScriptTypeScriptTransformer(Transformer):
         return items[0]  # Return the actual statement
     
     def program(self, items):
-        return {"type": "Program", "body": list(items)}
+        body = [item for item in items if item and item != []]  # Filter out empty items
+        return {"type": "Program", "body": body}
     
     def identifier(self, items):
         return {"type": "Identifier", "name": str(items[0])}
@@ -83,19 +84,50 @@ class JavaScriptTypeScriptTransformer(Transformer):
     def function_declaration(self, items):
         result = {"type": "FunctionDeclaration", "async": False, "generator": False}
         
+        # Initialize defaults
+        result["id"] = None
+        result["params"] = []
+        result["body"] = None
+        
         # Parse function components
-        for item in items:
-            if isinstance(item, dict):
-                if item.get("type") == "Identifier":
-                    result["id"] = item
-                elif item.get("type") == "BlockStatement":
-                    result["body"] = item
-            elif isinstance(item, str):
+        i = 0
+        while i < len(items):
+            item = items[i]
+            if isinstance(item, str):
                 if item == "async":
                     result["async"] = True
                 elif item == "*":
                     result["generator"] = True
+                elif item == "function":
+                    pass  # keyword
+            elif isinstance(item, dict):
+                if item.get("type") == "Identifier":
+                    result["id"] = item
+                elif item.get("type") == "BlockStatement":
+                    result["body"] = item
+            elif isinstance(item, list):
+                # This should be the parameter list
+                result["params"] = item
+            i += 1
         
+        return result
+    
+    def parameter_list(self, items):
+        return list(items)
+    
+    def parameter(self, items):
+        param = {"type": "Identifier", "name": items[0]["name"]}
+        if len(items) > 1:
+            # Has default value
+            param["default"] = items[1]
+        return param
+    
+    def return_statement(self, items):
+        result = {"type": "ReturnStatement"}
+        if items and len(items) > 0:
+            result["argument"] = items[0]
+        else:
+            result["argument"] = None
         return result
     
     def block_statement(self, items):
@@ -186,19 +218,32 @@ class JavaScriptTypeScriptTransformer(Transformer):
         if len(items) == 1:
             return items[0]
         
+        # Handle pattern: expr (op expr)*
         result = items[0]
         i = 1
         while i < len(items):
-            operator = items[i] if isinstance(items[i], str) else default_operator
-            right = items[i + 1] if i + 1 < len(items) else None
-            if operator and right:
-                result = {
-                    "type": "BinaryExpression",
-                    "operator": operator,
-                    "left": result,
-                    "right": right
-                }
-            i += 2
+            if isinstance(items[i], str):
+                # This is an operator
+                operator = items[i]
+                if i + 1 < len(items):
+                    right = items[i + 1]
+                    result = {
+                        "type": "BinaryExpression",
+                        "operator": operator,
+                        "left": result,
+                        "right": right
+                    }
+                i += 2
+            else:
+                # This might be another operand
+                if default_operator:
+                    result = {
+                        "type": "BinaryExpression",
+                        "operator": default_operator,
+                        "left": result,
+                        "right": items[i]
+                    }
+                i += 1
         return result
     
     def string_literal(self, items):
@@ -217,6 +262,36 @@ class JavaScriptTypeScriptTransformer(Transformer):
     
     def assignment_operator(self, items):
         return str(items[0]) if items else "="
+    
+    def array_literal(self, items):
+        elements = items[0] if items else []
+        return {"type": "ArrayExpression", "elements": elements}
+    
+    def array_element_list(self, items):
+        return list(items)
+    
+    def array_element(self, items):
+        return items[0] if items else None
+    
+    def object_literal(self, items):
+        properties = items[0] if items else []
+        return {"type": "ObjectExpression", "properties": properties}
+    
+    def property_list(self, items):
+        return list(items)
+    
+    def property_assignment(self, items):
+        if len(items) >= 2:
+            return {
+                "type": "Property",
+                "key": items[0],
+                "value": items[1],
+                "kind": "init",
+                "method": False,
+                "shorthand": False,
+                "computed": False
+            }
+        return None
     
     def null_literal(self, items):
         return {"type": "Literal", "value": None, "raw": "null"}
